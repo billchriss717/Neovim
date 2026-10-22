@@ -715,7 +715,7 @@ require('lazy').setup {
           settings = {
             texlab = {
               build = {
-                executable = 'latexmk',
+                executable = { 'latexmk', 'latex-rm' },
                 args = { '-pdf', '-interaction=nonstopmode', '-synctex=1', '%f' },
                 onSave = true,
               },
