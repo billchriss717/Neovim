@@ -649,64 +649,27 @@ require('lazy').setup {
         --        For example, to see the options for `lua_ls`, you could go to: https://luals.github.io/wiki/settings/
 
         local servers = {
-          texlab = {
-            settings = {
-              texlab = {
-                build = {
-                  executable = 'latexmk',
-                  args = { '-pdf', '-inteeraction=nonstopmode', 'synctex=1', '%f' },
-                  onsave = true,
-                },
-                chktex = {
-                  onOpenAndSave = true,
-                },
-                diagnosticsDelay = 300,
-              },
-            },
-          },
-        }
-
-        local servers = {
           clangd = {
             cmd = {
               'clangd',
               '--background-index',
               '--clang-tidy',
-              -- Absolute literal path for the 'chriss' machine
-              '--query-driver=/home/chriss/.espressif/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc',
+              '--query-driver=' .. vim.env.HOME .. '/.espressif/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc',
             },
           },
-          -- gopls = {},
-          -- pyright = {},
-          -- rust_analyzer = {},
-          -- ... etc. See `:help lspconfig-all` for a list of all the pre-configured LSPs
-          --
-          -- Some languages (like typescript) have entire language plugins that can be useful:
-          --    https://github.com/pmizio/typescript-tools.nvim
-          --
-          -- But for many setups, the LSP (`ts_ls`) will work just fine
-          -- ts_ls = {},
-          --
           marksman = {
             filetypes = { 'markdown', 'qmd' },
           },
-
           lua_ls = {
-            -- cmd = {...},
-            -- filetypes = { ...},
-            -- capabilities = {},
             settings = {
               Lua = {
                 completion = {
                   callSnippet = 'Replace',
                 },
-                -- You can toggle below to ignore Lua_LS's noisy `missing-fields` warnings
-                -- diagnostics = { disable = { 'missing-fields' } },
               },
             },
           },
         }
-
         -- Ensure the servers and tools above are installed
         --  To check the current status of installed tools and/or manually install
         --  other tools, you can run
@@ -720,6 +683,7 @@ require('lazy').setup {
         local ensure_installed = vim.tbl_keys(servers or {})
         vim.list_extend(ensure_installed, {
           'stylua', -- Used to format Lua code
+          'texlab',
         })
         require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
@@ -727,24 +691,43 @@ require('lazy').setup {
           handlers = {
             function(server_name)
               local server = servers[server_name] or {}
-              -- This handles overriding only values explicitly passed
-              -- by the server configuration above. Useful when disabling
-              -- certain features of an LSP (for example, turning off formatting for ts_ls)
               server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-              require('lspconfig')[server_name].setup(server)
+
+              -- Modern Neovim native LSP configuration API
+              vim.lsp.config(server_name, server)
+              vim.lsp.enable(server_name)
             end,
           },
           -- Force clangd to register with the correct QueryDriver command on this machine
           -- ADD THIS NEW WARNING-FREE BLOCK INSTEAD:
-          vim.lsp.config('clangd', {
-            cmd = {
-              'clangd',
-              '--background-index',
-              '--clang-tidy',
-              '--query-driver=/home/chriss/.espressif/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc',
+          --   vim.lsp.config('clangd', {
+          --     cmd = {
+          --       'clangd',
+          --       '--background-index',
+          --       '--clang-tidy',
+          --       '--query-driver=/home/chriss/.espressif/tools/xtensa-esp-elf/esp-16.1.0_20260609/xtensa-esp-elf/bin/xtensa-esp32-elf-gcc',
+          --     },
+          --   }),
+        } -- Explicit texlab configuration (must be after mason-lspconfig.setup)
+        vim.lsp.config('texlab', {
+          capabilities = capabilities,
+          root_markers = { '.git', '.latexmkrc', 'texlabroot', '.texlabroot', 'Tectonic.toml' },
+          settings = {
+            texlab = {
+              build = {
+                executable = 'latexmk',
+                args = { '-pdf', '-interaction=nonstopmode', '-synctex=1', '%f' },
+                onSave = true,
+              },
+              chktex = {
+                onEdit = true,
+                onOpenAndSave = true,
+              },
+              diagnosticsDelay = 300,
             },
-          }),
-        }
+          },
+        })
+        vim.lsp.enable 'texlab'
       end,
     },
 
