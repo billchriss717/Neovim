@@ -3,6 +3,17 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.api.nvim_create_autocmd('FileType', {
+
+  pattern = { 'tex', 'latex', 'markdown' },
+  callback = function()
+    vim.opt_local.spell = true
+    vim.opt_local.spelllang = { 'en_gb' }
+  end,
+})
+
+vim.keymap.set('n', '<leader>sp', '<cmd>set spell!<CR>', { desc = '[S]pell [T]oggle' })
+
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = true
 vim.o.fillchars = 'eob: '
@@ -715,7 +726,7 @@ require('lazy').setup {
           settings = {
             texlab = {
               build = {
-                executable = { 'latexmk', 'latex-rm' },
+                executable = 'latexmk',
                 args = { '-pdf', '-interaction=nonstopmode', '-synctex=1', '%f' },
                 onSave = true,
               },
