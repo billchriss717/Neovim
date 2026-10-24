@@ -3,6 +3,12 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+vim.keymap.set('n', '<leader>f', function()
+  require('conform').format {
+    async = false,
+    lsp_format = 'never',
+  }
+end, { desc = 'Format current buffer' })
 -- Custom diagnostic signs
 local signs = {
   ERROR = '󰅚',
@@ -27,19 +33,19 @@ vim.diagnostic.config {
 }
 --
 -- Format Bash scripts automatically on save
-vim.api.nvim_create_autocmd('BufWritePre', {
-  pattern = '*.sh',
-  callback = function()
-    local file = vim.fn.expand '%:p'
-    local formatted = vim.fn.system { 'shfmt', '-i', '4', file }
-
-    if vim.v.shell_error == 0 then
-      vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(formatted, '\n', { plain = true }))
-    else
-      vim.notify('shfmt failed: ' .. formatted, vim.log.levels.ERROR)
-    end
-  end,
-})
+-- vim.api.nvim_create_autocmd('BufWritePre', {
+--   pattern = '*.sh',
+--   callback = function()
+--     local file = vim.fn.expand '%:p'
+--     local formatted = vim.fn.system { 'shfmt', '-i', '4', file }
+--
+--     if vim.v.shell_error == 0 then
+--       vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(formatted, '\n', { plain = true }))
+--     else
+--       vim.notify('shfmt failed: ' .. formatted, vim.log.levels.ERROR)
+--     end
+--   end,
+-- })
 
 vim.api.nvim_create_autocmd('FileType', {
 
@@ -274,6 +280,20 @@ require('lazy').setup {
     --   --   },
     --   -- },
     -- },
+    {
+      'stevearc/conform.nvim',
+      opts = {
+        formatters_by_ft = {
+          bash = { 'shfmt' },
+          sh = { 'shfmt' },
+        },
+        formatters = {
+          shfmt = {
+            append_args = { '-i', '4' },
+          },
+        },
+      },
+    },
     {
       -- amongst your other plugins
       -- { 'akinsho/toggleterm.nvim', version = '*', config = true },
@@ -728,6 +748,7 @@ require('lazy').setup {
               },
             },
           },
+          bashls = {},
         }
         -- Ensure the servers and tools above are installed
         --  To check the current status of installed tools and/or manually install
