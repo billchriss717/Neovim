@@ -5,7 +5,7 @@ vim.g.maplocalleader = ' '
 
 vim.api.nvim_create_autocmd('BufWritePre', {
   pattern = { '*.sh', '.bashrc', '.bash_prfile' },
-  callabck = function()
+  callback = function()
     vim.cmd 'silent! %!shfmt -i 4'
   end,
 })
