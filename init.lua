@@ -478,8 +478,18 @@ require('lazy').setup {
     {
       'lewis6991/gitsigns.nvim',
       config = function()
-        require('gitsigns').setup()
-        vim.keymap.set('n', '<leader>gp', ':Gitsigns preview_hunk<CR>', {})
+        local gs = require 'gitsigns'
+        gs.setup()
+
+        vim.keymap.set('n', '<leader>gp', gs.preview_hunk, { desc = 'Preview Git hunk' })
+
+        vim.keymap.set('n', '<leader>gs', gs.stage_hunk, { desc = 'Stage Git hunk' })
+
+        vim.keymap.set('n', '<leader>gu', function()
+          gs.stage_hunk()
+        end, { desc = 'Undo stage Git hunk' })
+
+        vim.keymap.set('n', '<leader>gr', gs.reset_hunk, { desc = 'Reset Git hunk' })
       end,
     },
     {
