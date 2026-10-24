@@ -3,10 +3,41 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
+-- Custom diagnostic signs
+local signs = {
+  ERROR = '󰅚',
+  WARN = '󰀪',
+  INFO = '󰋽',
+  HINT = '󰌶',
+}
+
+local diagnostic_signs = {}
+for type, icon in pairs(signs) do
+  local severity = vim.diagnostic.severity[type]
+  diagnostic_signs[severity] = icon
+end
+
+vim.diagnostic.config {
+  signs = {
+    text = diagnostic_signs,
+  },
+  virtual_text = false,
+  underline = true,
+  update_in_insert = false,
+}
+--
+-- Format Bash scripts automatically on save
 vim.api.nvim_create_autocmd('BufWritePre', {
-  pattern = { '*.sh', '.bashrc', '.bash_prfile' },
+  pattern = '*.sh',
   callback = function()
-    vim.cmd 'silent! %!shfmt -i 4'
+    local file = vim.fn.expand '%:p'
+    local formatted = vim.fn.system { 'shfmt', '-i', '4', file }
+
+    if vim.v.shell_error == 0 then
+      vim.api.nvim_buf_set_lines(0, 0, -1, false, vim.split(formatted, '\n', { plain = true }))
+    else
+      vim.notify('shfmt failed: ' .. formatted, vim.log.levels.ERROR)
+    end
   end,
 })
 
